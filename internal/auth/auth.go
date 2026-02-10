@@ -202,9 +202,6 @@ func ValidateConfig(cfg *config.Config) error {
 	if cfg.KeyID == "" {
 		missing = append(missing, "key_id")
 	}
-	if cfg.OrgID == "" {
-		missing = append(missing, "org_id")
-	}
 	if cfg.PrivateKeyPath == "" {
 		missing = append(missing, "private_key_path")
 	}

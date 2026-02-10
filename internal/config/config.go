@@ -34,7 +34,7 @@ func ConfigDir() string {
 		fmt.Fprintf(os.Stderr, "Error: cannot determine home directory: %v\n", err)
 		os.Exit(3)
 	}
-	configDir = filepath.Join(home, ".asa")
+	configDir = filepath.Join(home, ".asa-cli")
 	return configDir
 }
 

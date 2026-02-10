@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,11 +20,13 @@ Credential Setup:
   1. Sign in at https://ads.apple.com
   2. Go to Settings > API tab
   3. Create an API user (or use existing)
-  4. Generate a new key pair — download the private key .pem file
+  4. Generate a key pair and upload the public key
   5. Note the Client ID, Team ID, Key ID from the API settings page
-  6. Your Org ID is visible in the account URL or API settings
-  7. Run: asa-cli configure --client-id "..." --team-id "..." --key-id "..." --org-id "..." --private-key-path "/path/to/key.pem"
-  8. Verify with: asa-cli whoami`,
+  6. Run: asa-cli configure --client-id "..." --team-id "..." --key-id "..." --private-key-path "/path/to/key.pem"
+  7. Verify with: asa-cli whoami
+
+Org ID is optional — if your account has a single org, it's auto-detected.
+For multiple orgs, set it via --org-id flag or in config.`,
 	RunE: runConfigure,
 }
 
@@ -39,8 +42,8 @@ func init() {
 	configureCmd.Flags().StringVar(&cfgClientID, "client-id", "", "Apple Search Ads Client ID")
 	configureCmd.Flags().StringVar(&cfgTeamID, "team-id", "", "Apple Developer Team ID")
 	configureCmd.Flags().StringVar(&cfgKeyID, "key-id", "", "API Key ID")
-	configureCmd.Flags().StringVar(&cfgOrgID, "org-id", "", "Organization ID")
-	configureCmd.Flags().StringVar(&cfgPrivateKeyPath, "private-key-path", "", "Path to private key .pem file")
+	configureCmd.Flags().StringVar(&cfgOrgID, "org-id", "", "Organization ID (optional — auto-detected for single-org accounts)")
+	configureCmd.Flags().StringVar(&cfgPrivateKeyPath, "private-key-path", "", "Path to private key (.pem or .p8 file)")
 	rootCmd.AddCommand(configureCmd)
 }
 
@@ -50,10 +53,12 @@ func runConfigure(cmd *cobra.Command, args []string) error {
 		return runInteractiveConfigure()
 	}
 
-	// Non-interactive mode — validate all are provided
-	if cfgClientID == "" || cfgTeamID == "" || cfgKeyID == "" || cfgOrgID == "" || cfgPrivateKeyPath == "" {
-		return fmt.Errorf("all flags are required in non-interactive mode: --client-id, --team-id, --key-id, --org-id, --private-key-path")
+	// Non-interactive mode — validate required fields (org-id is optional)
+	if cfgClientID == "" || cfgTeamID == "" || cfgKeyID == "" || cfgPrivateKeyPath == "" {
+		return fmt.Errorf("required flags: --client-id, --team-id, --key-id, --private-key-path\nOptional: --org-id (auto-detected for single-org accounts)")
 	}
+
+	cfgPrivateKeyPath = expandPath(cfgPrivateKeyPath)
 
 	// Validate key file exists
 	if _, err := os.Stat(cfgPrivateKeyPath); os.IsNotExist(err) {
@@ -93,8 +98,8 @@ func runInteractiveConfigure() error {
 	clientID := prompt(reader, "Client ID")
 	teamID := prompt(reader, "Team ID")
 	keyID := prompt(reader, "Key ID")
-	orgID := prompt(reader, "Org ID")
-	privateKeyPath := prompt(reader, "Private Key Path (.pem file)")
+	orgID := promptOptional(reader, "Org ID (press Enter to skip — auto-detected for single-org accounts)")
+	privateKeyPath := expandPath(prompt(reader, "Private Key Path (.pem or .p8 file)"))
 
 	// Validate key file
 	if _, err := os.Stat(privateKeyPath); os.IsNotExist(err) {
@@ -122,6 +127,15 @@ func runInteractiveConfigure() error {
 	return nil
 }
 
+func expandPath(path string) string {
+	if strings.HasPrefix(path, "~/") {
+		if home, err := os.UserHomeDir(); err == nil {
+			return filepath.Join(home, path[2:])
+		}
+	}
+	return path
+}
+
 func prompt(reader *bufio.Reader, label string) string {
 	for {
 		fmt.Printf("%s: ", label)
@@ -132,4 +146,10 @@ func prompt(reader *bufio.Reader, label string) string {
 		}
 		fmt.Println("  Value cannot be empty. Please try again.")
 	}
+}
+
+func promptOptional(reader *bufio.Reader, label string) string {
+	fmt.Printf("%s: ", label)
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
 }

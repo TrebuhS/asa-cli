@@ -21,7 +21,7 @@ func init() {
 }
 
 func runWhoami(cmd *cobra.Command, args []string) error {
-	client, err := newAPIClient()
+	client, err := newAPIClientNoOrg()
 	if err != nil {
 		return err
 	}

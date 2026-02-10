@@ -21,7 +21,9 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	req2 := req.Clone(req.Context())
 	req2.Header.Set("Authorization", "Bearer "+token)
-	req2.Header.Set("X-AP-Context", "orgId="+t.OrgID)
+	if t.OrgID != "" {
+		req2.Header.Set("X-AP-Context", "orgId="+t.OrgID)
+	}
 
 	base := t.Base
 	if base == nil {
