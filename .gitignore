@@ -7,7 +7,10 @@
 # IDE / local tools
 .idea/
 .vscode/
+
+# Claude Code
 .claude/
+CLAUDE.md
 
 # Config/credentials (should never be in repo)
 *.pem
