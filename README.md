@@ -1,4 +1,4 @@
-# asa-cli
+# Apple Search Ads CLI (non-official)
 
 A command-line tool for the [Apple Search Ads](https://searchads.apple.com) Campaign Management API (v5). Manage campaigns, ad groups, keywords, negative keywords, and pull performance reports — all from your terminal.
 
