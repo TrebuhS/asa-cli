@@ -81,6 +81,9 @@ func buildReportRequest() *models.ReportRequest {
 		ReturnGrandTotals: rptGrandTotals,
 		ReturnRowTotals:   true,
 		Selector: &models.Selector{
+			OrderBy: []models.OrderByItem{
+				{Field: "localSpend", SortOrder: "DESCENDING"},
+			},
 			Pagination: models.SelectorPagination{
 				Offset: 0,
 				Limit:  rptLimit,
@@ -142,11 +145,11 @@ func printReport(resp *models.ReportingDataResponse) {
 }
 
 func printMetricsRow(m *models.SpendRow) {
-	fmt.Printf("  Impressions: %d | Taps: %d | Installs: %d | NewDL: %d | Redownloads: %d\n",
-		m.Impressions, m.Taps, m.Installs, m.NewDownloads, m.Redownloads)
-	fmt.Printf("  TTR: %.4f | ConvRate: %.4f | AvgCPA: %s %s | AvgCPT: %s %s | Spend: %s %s\n",
-		m.TTR, m.ConversionRate,
-		m.AvgCPA.Amount, m.AvgCPA.Currency,
+	fmt.Printf("  Impressions: %d | Taps: %d | Installs: %d (tap: %d, view: %d) | NewDL: %d | Redownloads: %d\n",
+		m.Impressions, m.Taps, m.TotalInstalls, m.TapInstalls, m.ViewInstalls, m.TotalNewDownloads, m.TotalRedownloads)
+	fmt.Printf("  TTR: %.4f | InstallRate: %.4f (tap: %.4f) | CPI: %s %s | AvgCPT: %s %s | Spend: %s %s\n",
+		m.TTR, m.TotalInstallRate, m.TapInstallRate,
+		m.TotalAvgCPI.Amount, m.TotalAvgCPI.Currency,
 		m.AvgCPT.Amount, m.AvgCPT.Currency,
 		m.LocalSpend.Amount, m.LocalSpend.Currency)
 }

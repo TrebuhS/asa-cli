@@ -35,18 +35,25 @@ type ReportRow struct {
 
 // SpendRow contains the metrics for a report row.
 type SpendRow struct {
-	Impressions    int64   `json:"impressions"`
-	Taps           int64   `json:"taps"`
-	Installs       int64   `json:"installs"`
-	NewDownloads   int64   `json:"newDownloads"`
-	Redownloads    int64   `json:"redownloads"`
-	LatOnInstalls  int64   `json:"latOnInstalls"`
-	LatOffInstalls int64   `json:"latOffInstalls"`
-	TTR            float64 `json:"ttr"`
-	AvgCPA         Money   `json:"avgCPA"`
-	AvgCPT         Money   `json:"avgCPT"`
-	LocalSpend     Money   `json:"localSpend"`
-	ConversionRate float64 `json:"conversionRate"`
+	Impressions       int64   `json:"impressions"`
+	Taps              int64   `json:"taps"`
+	TotalInstalls     int64   `json:"totalInstalls"`
+	TapInstalls       int64   `json:"tapInstalls"`
+	ViewInstalls      int64   `json:"viewInstalls"`
+	TotalNewDownloads int64   `json:"totalNewDownloads"`
+	TapNewDownloads   int64   `json:"tapNewDownloads"`
+	ViewNewDownloads  int64   `json:"viewNewDownloads"`
+	TotalRedownloads  int64   `json:"totalRedownloads"`
+	TapRedownloads    int64   `json:"tapRedownloads"`
+	ViewRedownloads   int64   `json:"viewRedownloads"`
+	TTR               float64 `json:"ttr"`
+	TotalInstallRate  float64 `json:"totalInstallRate"`
+	TapInstallRate    float64 `json:"tapInstallRate"`
+	AvgCPT            Money   `json:"avgCPT"`
+	AvgCPM            Money   `json:"avgCPM"`
+	TapInstallCPI     Money   `json:"tapInstallCPI"`
+	TotalAvgCPI       Money   `json:"totalAvgCPI"`
+	LocalSpend        Money   `json:"localSpend"`
 }
 
 // GranularityRow is a time-bucketed metrics row.
