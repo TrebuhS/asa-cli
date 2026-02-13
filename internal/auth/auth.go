@@ -2,7 +2,9 @@ package auth
 
 import (
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"crypto/x509"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -48,7 +50,7 @@ func (tp *TokenProvider) GetToken() (string, error) {
 
 	// Try loading from cache
 	if tp.token == nil {
-		tp.token = loadCachedToken()
+		tp.token = tp.loadCachedToken()
 	}
 
 	// Return cached token if still valid (with 5 min buffer)
@@ -63,7 +65,7 @@ func (tp *TokenProvider) GetToken() (string, error) {
 	}
 
 	tp.token = token
-	saveCachedToken(token)
+	tp.saveCachedToken(token)
 	return token.AccessToken, nil
 }
 
@@ -166,12 +168,12 @@ func loadPrivateKey(path string) (*ecdsa.PrivateKey, error) {
 	return nil, fmt.Errorf("unable to parse private key (tried PKCS#8 and SEC1 formats)")
 }
 
-func cachePath() string {
-	return filepath.Join(config.ConfigDir(), "token_cache.json")
+func (tp *TokenProvider) cachePath() string {
+	return filepath.Join(config.ConfigDir(), "token_cache_"+tp.cacheKey()+".json")
 }
 
-func loadCachedToken() *TokenCache {
-	data, err := os.ReadFile(cachePath())
+func (tp *TokenProvider) loadCachedToken() *TokenCache {
+	data, err := os.ReadFile(tp.cachePath())
 	if err != nil {
 		return nil
 	}
@@ -182,13 +184,28 @@ func loadCachedToken() *TokenCache {
 	return &cache
 }
 
-func saveCachedToken(token *TokenCache) {
+func (tp *TokenProvider) saveCachedToken(token *TokenCache) {
 	data, err := json.MarshalIndent(token, "", "  ")
 	if err != nil {
 		return
 	}
-	_ = os.MkdirAll(filepath.Dir(cachePath()), 0700)
-	_ = os.WriteFile(cachePath(), data, 0600)
+	_ = os.MkdirAll(filepath.Dir(tp.cachePath()), 0700)
+	_ = os.WriteFile(tp.cachePath(), data, 0600)
+}
+
+func (tp *TokenProvider) cacheKey() string {
+	var sb strings.Builder
+	sb.WriteString(tp.cfg.ClientID)
+	sb.WriteString("|")
+	sb.WriteString(tp.cfg.TeamID)
+	sb.WriteString("|")
+	sb.WriteString(tp.cfg.KeyID)
+	sb.WriteString("|")
+	sb.WriteString(tp.cfg.OrgID)
+	sb.WriteString("|")
+	sb.WriteString(tp.cfg.PrivateKeyPath)
+	sum := sha256.Sum256([]byte(sb.String()))
+	return hex.EncodeToString(sum[:])
 }
 
 func ValidateConfig(cfg *config.Config) error {

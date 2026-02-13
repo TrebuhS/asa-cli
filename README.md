@@ -201,7 +201,7 @@ done
 
 ## Configuration
 
-Stored at `~/.asa-cli/config.yaml`. Tokens are cached at `~/.asa-cli/token_cache.json`.
+Stored at `~/.asa-cli/config.yaml`. Tokens are cached under `~/.asa-cli/token_cache_<hash>.json`.
 
 ### Multiple Profiles
 
