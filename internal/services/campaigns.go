@@ -46,7 +46,8 @@ func (s *CampaignService) Create(campaign *models.Campaign) (*models.Campaign, e
 
 func (s *CampaignService) Update(id int64, update *models.CampaignUpdate) (*models.Campaign, error) {
 	var updated models.Campaign
-	_, err := s.Client.Put(fmt.Sprintf("/campaigns/%d", id), update, &updated)
+	req := &models.UpdateCampaignRequest{Campaign: update}
+	_, err := s.Client.Put(fmt.Sprintf("/campaigns/%d", id), req, &updated)
 	return &updated, err
 }
 
