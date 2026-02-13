@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,4 +26,45 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Update Homebrew formula
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${VERSION}.tar.gz"
+          SHA256=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
+
+          FORMULA=$(cat <<EOF
+          class AsaCli < Formula
+            desc "CLI for the Apple Search Ads Campaign Management API v5"
+            homepage "https://github.com/${{ github.repository }}"
+            url "${URL}"
+            sha256 "${SHA256}"
+            license "MIT"
+
+            depends_on "go" => :build
+
+            def install
+              system "go", "build", *std_go_args(ldflags: "-s -w")
+            end
+
+            test do
+              assert_match "Apple Search Ads", shell_output("#{bin}/asa-cli --help")
+            end
+          end
+          EOF
+          )
+
+          # Push to homebrew-tap
+          EXISTING=$(curl -s -H "Authorization: token $TAP_TOKEN" \
+            "https://api.github.com/repos/TrebuhS/homebrew-tap/contents/Formula/asa-cli.rb" | \
+            python3 -c "import sys,json; print(json.load(sys.stdin).get('sha',''))")
+
+          ENCODED=$(echo "$FORMULA" | base64 -w0)
+
+          curl -s -X PUT \
+            -H "Authorization: token $TAP_TOKEN" \
+            -H "Content-Type: application/json" \
+            "https://api.github.com/repos/TrebuhS/homebrew-tap/contents/Formula/asa-cli.rb" \
+            -d "{\"message\":\"Update asa-cli to ${VERSION}\",\"content\":\"${ENCODED}\",\"sha\":\"${EXISTING}\"}"

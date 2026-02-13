@@ -17,18 +17,3 @@ builds:
 archives:
   - format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-
-brews:
-  - repository:
-      owner: TrebuhS
-      name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    name: asa-cli
-    homepage: "https://github.com/TrebuhS/Apple-Search-Ads-CLI"
-    description: "CLI for the Apple Search Ads Campaign Management API v5"
-    license: "MIT"
-    install: |
-      bin.install "asa-cli"
-    test: |
-      assert_match "Apple Search Ads", shell_output("#{bin}/asa-cli --help")
